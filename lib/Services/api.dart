@@ -11,26 +11,42 @@ class Api {
 
   Future<Map<String, dynamic>> authenticate(
       String login, String password) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/auth'),
-      body: {
-        'login': login,
-        'passwd': password,
-      },
-    );
-
-    return _handleResponse(response);
+    http.Response response = http.Response('', 511);
+    try {
+      response = await http.post(
+        Uri.parse('$baseUrl/api/auth'),
+        body: {
+          'login': login,
+          'passwd': password,
+        },
+      );
+    } catch (e) {
+      print(e);
+    }
+    if (response.statusCode == 511) {
+      return {'status': 'error', 'message': 'Ошибка соединения'};
+    } else {
+      return _handleResponse(response);
+    }
   }
 
   Future<Map<String, dynamic>> checkSession(String apiKey) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/api/check'),
-      headers: {
-        'X-Api-Key': apiKey,
-      },
-    );
-
-    return _handleResponse(response);
+    http.Response response = http.Response('', 511);
+    try {
+      response = await http.get(
+        Uri.parse('$baseUrl/api/check'),
+        headers: {
+          'X-Api-Key': apiKey,
+        },
+      );
+    } catch (e) {
+      print(e);
+    }
+    if (response.statusCode == 511) {
+      return {'status': 'error', 'message': 'Ошибка соединения'};
+    } else {
+      return _handleResponse(response);
+    }
   }
 
   Future<String> uploadGroupByUploader(String apiKey, String description,

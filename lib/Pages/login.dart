@@ -66,6 +66,7 @@ class LoginPageState extends State<LoginPage> {
                     Api api = Api();
                     var result = await api.authenticate(username, password);
                     print(result);
+                    // обработку ответа
                     if (result['status'].toString() == 'success') {
                       secretKey = result['api_key'];
                       api.saveSecretKey(secretKey.toString());
@@ -73,9 +74,8 @@ class LoginPageState extends State<LoginPage> {
                           builder: (context) => const PinCodePage()));
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Ошибка авторизации')));
+                          SnackBar(content: Text(result['message'])));
                     }
-                    // обработку ответа
                   }
                 },
                 child: const Text('Войти'),
