@@ -88,7 +88,7 @@ class _EditPhotoPageState extends State<EditPhotoPage> {
                 //XFile newPhoto = XFile.fromData(memoryUint8List, path: widget.photo.path);
                 //newPhoto.saveTo(widget.photo.path);
                 File(widget.photo.path).writeAsBytesSync(img.encodeJpg(image));
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(memoryUint8List);
               },
               icon: const Icon(Icons.save)),
         ],

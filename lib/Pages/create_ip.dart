@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
@@ -23,7 +24,8 @@ class _CreatePage2State extends State<CreatePage2> {
   bool isEditDescrition = false;
   String description = '';
   int rotation = 0;
-  XFile? photo;
+  XFile? imagePickerXFile;
+  Uint8List? imageData;
   List<Photo> photosGroup = [];
 
   @override
@@ -95,26 +97,13 @@ class _CreatePage2State extends State<CreatePage2> {
                     int index = DateTime.now().microsecondsSinceEpoch;
                     List<dynamic> group = [];
                     for (var i = 0; i < photosGroup.length; i++) {
-                      try {
-                        String path =
-                            (await getApplicationSupportDirectory()).path;
-                        path += '/$index-$i.jpg';
-                        debugPrint(path);
-                        print(
-                            'original path in memory: ${photosGroup[i].photo?.path}');
-                        await photosGroup[i].photo?.saveTo(path);
-                        group.add([
-                          i.toString(),
-                          photosGroup[i].lat.toString(),
-                          photosGroup[i].long.toString()
-                        ]);
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text(
-                                    'Произошла ошибка сохранения файла...')));
-                        debugPrint(e as String?);
-                      }
+                      print('original path in memory: ${photosGroup[i].path}');
+                      //photosGroup[i].photo?.writeAsBytesSync(bytes);
+                      group.add([
+                        i.toString(),
+                        photosGroup[i].lat.toString(),
+                        photosGroup[i].long.toString()
+                      ]);
                     }
                     notUploaded.add(
                         [index.toString(), description, jsonEncode(group)]);
@@ -129,26 +118,36 @@ class _CreatePage2State extends State<CreatePage2> {
                   icon: const Icon(Icons.upload),
                   label: const Text('Сохранить группу'))
             ],
-            if (photo != null) ...[
+            if (imageData != null) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: AspectRatio(
                   aspectRatio: 1,
-                  child: Image.file(
-                    File(photo!.path),
+                  child: Image.memory(
+                    imageData!,
                     filterQuality: FilterQuality.high,
                   ),
                 ),
               ),
               TextButton.icon(
                   onPressed: () async {
-                    setState(() {
-                      photosGroup.add(Photo(
-                          long: _location!.longitude,
-                          lat: _location!.latitude,
-                          photo: photo));
-                      photo = null;
-                    });
+                    try {
+                      String path =
+                          (await getApplicationSupportDirectory()).path;
+                      path +=
+                          '/${DateTime.now().microsecondsSinceEpoch}-${photosGroup.length}.jpg';
+                      File(path).writeAsBytesSync(imageData!);
+                      setState(() {
+                        photosGroup.add(Photo(
+                            long: _location!.longitude,
+                            lat: _location!.latitude,
+                            path: path,
+                            data: imageData));
+                        imageData = null;
+                      });
+                    } catch (e) {
+                      print(e);
+                    }
                   },
                   icon: const Icon(Icons.add_a_photo),
                   label: const Text('Добавить в группу'))
@@ -170,7 +169,7 @@ class _CreatePage2State extends State<CreatePage2> {
     ImagePicker().pickImage(source: ImageSource.camera).then((value) {
       if (value != null) {
         Navigator.of(context)
-            .push(MaterialPageRoute(
+            .push<Uint8List>(MaterialPageRoute(
                 builder: (context) => EditPhotoPage(
                         photo: value,
                         description: description,
@@ -178,10 +177,11 @@ class _CreatePage2State extends State<CreatePage2> {
                           _location!.longitude ?? 0,
                           _location!.latitude ?? 0
                         ])))
-            .then((_) async {
-          await value.readAsBytes();
+            .then((editedImageData) async {
+          //await value.readAsBytes();
           setState(() {
-            photo = value;
+            imagePickerXFile = value;
+            imageData = editedImageData;
           });
         });
       }
