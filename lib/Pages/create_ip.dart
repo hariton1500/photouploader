@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photouploader/Models/group.dart';
+import 'package:photouploader/Pages/editimage.dart';
 import 'package:photouploader/Pages/editphoto.dart';
 import 'package:photouploader/Widgets/littlephotos.dart';
 import 'package:photouploader/globals.dart';
@@ -170,8 +171,8 @@ class _CreatePage2State extends State<CreatePage2> {
       if (value != null) {
         Navigator.of(context)
             .push<Uint8List>(MaterialPageRoute(
-                builder: (context) => EditPhotoPage(
-                        photo: value,
+                builder: (context) => EditImagePage(
+                        pathFromPicker: value.path,
                         description: description,
                         coords: [
                           _location!.longitude ?? 0,

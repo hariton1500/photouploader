@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
+import 'package:image_painter/image_painter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_watermark/image_watermark.dart';
 
@@ -27,13 +28,12 @@ class _EditPhotoPageState extends State<EditPhotoPage> {
   late img.Image image;
   Image? imageToShow;
   Uint8List memoryUint8List = Uint8List.fromList([]);
+  bool useExtendedImageWidget = true;
+  final _imageKey = GlobalKey<ImagePainterState>();
 
   @override
   void initState() {
     super.initState();
-    setState(() {
-      imageToShow = Image.file(File(widget.photo.path));
-    });
     memoryUint8List = File(widget.photo.path).readAsBytesSync();
     //
     //makeEditProcedures();
@@ -67,6 +67,8 @@ class _EditPhotoPageState extends State<EditPhotoPage> {
               icon: const Icon(Icons.rotate_right)),
           IconButton(
               onPressed: () async {
+                memoryUint8List =
+                    (await _imageKey.currentState!.exportImage())!;
                 var watermarkedUint8List =
                     await ImageWatermark.addTextWatermark(
                   imgBytes: memoryUint8List,
@@ -76,9 +78,9 @@ class _EditPhotoPageState extends State<EditPhotoPage> {
                   color: Colors.red,
                 );
                 memoryUint8List = watermarkedUint8List;
-                setState(() {
-                  imageToShow = Image.memory(memoryUint8List);
-                });
+
+                _imageKey.currentState!.setState(() {});
+                setState(() {});
               },
               icon: const Icon(Icons.place)),
           IconButton(
@@ -87,22 +89,26 @@ class _EditPhotoPageState extends State<EditPhotoPage> {
                 //widget.photo.saveTo(widget.photo.path);
                 //XFile newPhoto = XFile.fromData(memoryUint8List, path: widget.photo.path);
                 //newPhoto.saveTo(widget.photo.path);
-                File(widget.photo.path).writeAsBytesSync(img.encodeJpg(image));
+                //File(widget.photo.path).writeAsBytesSync(img.encodeJpg(image));
                 Navigator.of(context).pop(memoryUint8List);
               },
               icon: const Icon(Icons.save)),
         ],
       ),
-      body: SafeArea(
-          child: imageToShow != null
-              ? AspectRatio(
-                  aspectRatio: 1,
-                  child: imageToShow,
-                )
-              : const Center(child: CircularProgressIndicator())),
+      body: !useExtendedImageWidget
+          ? SafeArea(
+              child: imageToShow != null
+                  ? AspectRatio(
+                      aspectRatio: 1,
+                      child: imageToShow,
+                    )
+                  : const Center(child: CircularProgressIndicator()))
+          : SafeArea(
+              child: ImagePainter.memory(memoryUint8List, key: _imageKey)),
     );
   }
 
+  /*
   void makeEditProcedures() async {
     //File photoFile = File(widget.photo.path);
     image = img.decodeJpg(File(widget.photo.path).readAsBytesSync())!;
@@ -116,7 +122,7 @@ class _EditPhotoPageState extends State<EditPhotoPage> {
     var t = await widget.photo.readAsBytes();
 
     final watermarkedImg = await ImageWatermark.addTextWatermark(
-      imgBytes: t,
+      imgBytes: memoryUint8List,
       watermarkText: '${widget.description}\n${widget.coords}',
       dstX: 0,
       dstY: 0,
@@ -124,23 +130,7 @@ class _EditPhotoPageState extends State<EditPhotoPage> {
     );
     File(widget.photo.path).writeAsBytesSync(watermarkedImg, flush: true);
     imageToShow = Image.file(File(widget.photo.path));
-    /*
-    final textOption = AddTextOption();
-    textOption.addText(
-      const EditorText(
-        offset: Offset(0, 0),
-        text: 'test',
-        fontSizePx: 10,
-        textColor: Colors.red,
-        fontName:
-            '', // You must register font before use. If the fontName is empty string, the text will use default system font.
-      ),
-    );
-    var f = await ImageEditor.editFileImage(
-        file: photoFile,
-        imageEditorOption: ImageEditorOption()..addOption(textOption));
-    await File(widget.photo.path).writeAsBytes(f!.buffer
-        .asUint8List()); //write edited file to disk using readAsBytes() instead of readAsBytesSync()*/
-    setState(() {});
-  }
+    memoryUint8List = watermarkedImg;
+    _imageKey.currentState?.setState(() {});
+  }*/
 }
