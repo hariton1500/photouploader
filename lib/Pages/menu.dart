@@ -9,7 +9,30 @@ class NormalModePage extends StatefulWidget {
   State<NormalModePage> createState() => _NormalModePageState();
 }
 
-class _NormalModePageState extends State<NormalModePage> {
+class _NormalModePageState extends State<NormalModePage>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.inactive) {
+      print('app inactive, is lock screen:'); // ${await isLockScreen()}');
+    } else if (state == AppLifecycleState.resumed) {
+      print('app resumed');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

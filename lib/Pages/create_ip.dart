@@ -7,7 +7,6 @@ import 'package:location/location.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photouploader/Models/group.dart';
 import 'package:photouploader/Pages/editimage.dart';
-import 'package:photouploader/Pages/editphoto.dart';
 import 'package:photouploader/Widgets/littlephotos.dart';
 import 'package:photouploader/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';

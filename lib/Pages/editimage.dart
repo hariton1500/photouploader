@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_painter/image_painter.dart';
-import 'package:image_watermark/image_watermark.dart';
+//import 'package:photouploader/Fonts/roboto.dart';
 
 Map<String, String> editImageStageStrings = {
   "rotating": "Вращаем фото",
@@ -31,6 +31,8 @@ class _EditImagePageState extends State<EditImagePage> {
   Uint8List memoryUint8List = Uint8List.fromList([]);
   final _imageKey = GlobalKey<ImagePainterState>();
 
+  bool isProcessing = false;
+
   @override
   void initState() {
     super.initState();
@@ -48,25 +50,46 @@ class _EditImagePageState extends State<EditImagePage> {
           if (stage == 'rotating') ...[
             IconButton(
                 onPressed: () {
+                  setState(() {
+                    isProcessing = true;
+                  });
                   img.Image? image = img.decodeJpg(memoryUint8List);
-                  image = img.copyRotate(img.decodeJpg(memoryUint8List)!, -90);
+                  image = img.copyRotate(img.decodeJpg(memoryUint8List)!,
+                      angle: -90);
                   //File(widget.pathFromPicker).writeAsBytesSync(img.encodeJpg(image), flush: true);
 
                   setState(() {
                     memoryUint8List = Uint8List.fromList(img.encodeJpg(image!));
+                    isProcessing = false;
                   });
                 },
                 icon: const Icon(Icons.rotate_left)),
             IconButton(
                 onPressed: () {
+                  setState(() {
+                    isProcessing = true;
+                  });
                   img.Image? image = img.decodeJpg(memoryUint8List);
-                  image = img.copyRotate(image!, 90);
+                  image = img.copyRotate(image!, angle: 90);
                   //File(widget.pathFromPicker).writeAsBytesSync(img.encodeJpg(image), flush: true);
+                  setState(() {
+                    memoryUint8List = Uint8List.fromList(img.encodeJpg(image!));
+                    isProcessing = false;
+                  });
+                },
+                icon: const Icon(Icons.rotate_right)),
+            /*
+            IconButton(
+                onPressed: () {
+                  img.Image? image = img.decodeJpg(memoryUint8List);
+                  image = img.drawString(
+                      image!, '${widget.description}\n${widget.coords}',
+                      font: roboto64, x: 10, y: 10);
                   setState(() {
                     memoryUint8List = Uint8List.fromList(img.encodeJpg(image!));
                   });
                 },
-                icon: const Icon(Icons.rotate_right)),
+                icon: const Icon(Icons.location_pin)),*/
             IconButton(
                 onPressed: () {
                   setState(() {
@@ -78,6 +101,10 @@ class _EditImagePageState extends State<EditImagePage> {
           if (stage == 'painting') ...[
             IconButton(
                 onPressed: () async {
+                  setState(() {
+                    isProcessing = true;
+                  });
+                  /*
                   memoryUint8List =
                       (await _imageKey.currentState!.exportImage())!;
                   var watermarkedUint8List =
@@ -90,8 +117,10 @@ class _EditImagePageState extends State<EditImagePage> {
                   );
                   setState(() {
                     memoryUint8List = watermarkedUint8List;
-                  });
-                  returnEditedImage(watermarkedUint8List);
+                    isProcessing = false;
+                  });*/
+                  returnEditedImage(
+                      (await _imageKey.currentState!.exportImage())!);
                 },
                 icon: const Icon(Icons.save_alt)),
           ]
@@ -100,12 +129,20 @@ class _EditImagePageState extends State<EditImagePage> {
       ),
       body: SafeArea(
           child: stage == 'rotating'
-              ? Image.memory(memoryUint8List)
-              : ImagePainter.memory(memoryUint8List, key: _imageKey)),
+              ? isProcessing
+                  ? const Center(child: CircularProgressIndicator())
+                  : Image.memory(memoryUint8List)
+              : isProcessing
+                  ? const Center(child: CircularProgressIndicator())
+                  : ImagePainter.memory(
+                      memoryUint8List,
+                      key: _imageKey,
+                      watermarkText: '${widget.description}\n${widget.coords}',
+                    )),
     );
   }
 
-  void returnEditedImage(Uint8List watermarkedUint8List) {
-    Navigator.pop(context, watermarkedUint8List);
+  void returnEditedImage(Uint8List newUint8List) {
+    Navigator.pop(context, newUint8List);
   }
 }

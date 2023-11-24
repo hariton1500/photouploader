@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_painter/image_painter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_watermark/image_watermark.dart';
 
 //import 'package:location_platform_interface/location_platform_interface.dart';
 
@@ -85,11 +84,6 @@ class _EditPhotoPageState extends State<EditPhotoPage> {
               icon: const Icon(Icons.place)),
           IconButton(
               onPressed: () {
-                //File(widget.photo.path).writeAsBytesSync(memoryUint8List.toList(), flush: true);
-                //widget.photo.saveTo(widget.photo.path);
-                //XFile newPhoto = XFile.fromData(memoryUint8List, path: widget.photo.path);
-                //newPhoto.saveTo(widget.photo.path);
-                //File(widget.photo.path).writeAsBytesSync(img.encodeJpg(image));
                 Navigator.of(context).pop(memoryUint8List);
               },
               icon: const Icon(Icons.save)),
@@ -107,30 +101,4 @@ class _EditPhotoPageState extends State<EditPhotoPage> {
               child: ImagePainter.memory(memoryUint8List, key: _imageKey)),
     );
   }
-
-  /*
-  void makeEditProcedures() async {
-    //File photoFile = File(widget.photo.path);
-    image = img.decodeJpg(File(widget.photo.path).readAsBytesSync())!;
-    image = img.bakeOrientation(image);
-    print('image width: ${image.width}');
-    print('image height: ${image.height}');
-    //image = img.copyRotate(image, 90);
-    print(image.exif.exifIfd.data);
-
-    File(widget.photo.path).writeAsBytesSync(img.encodeJpg(image), flush: true);
-    var t = await widget.photo.readAsBytes();
-
-    final watermarkedImg = await ImageWatermark.addTextWatermark(
-      imgBytes: memoryUint8List,
-      watermarkText: '${widget.description}\n${widget.coords}',
-      dstX: 0,
-      dstY: 0,
-      color: Colors.red,
-    );
-    File(widget.photo.path).writeAsBytesSync(watermarkedImg, flush: true);
-    imageToShow = Image.file(File(widget.photo.path));
-    memoryUint8List = watermarkedImg;
-    _imageKey.currentState?.setState(() {});
-  }*/
 }
