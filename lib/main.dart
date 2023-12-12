@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:photouploader/Pages/askpin.dart';
-import 'package:photouploader/Pages/login.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:photouploader/Pages/Auth/login.dart';
+import 'package:photouploader/Pages/menu.dart';
 import 'package:photouploader/Services/api.dart';
 import 'package:photouploader/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,14 +22,25 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-  secretKey = sharedPreferences.getString('secretKey') ?? '';
   Api api = Api();
-  var result = await api.checkSession(secretKey);
-  if (result['status'].toString() == 'success') {
-    sessionCheck = true;
-  }
   pin = sharedPreferences.getString('pin') ?? '';
+  printLog('Stored pin: $pin');
   specpin = sharedPreferences.getString('specpin') ?? '';
+  printLog('Stored specpin: $specpin');
+  secretKey = sharedPreferences.getString('secretKey') ?? '';
+  printLog('Stored secretKey: $secretKey');
+  if (pin != '' && specpin != '') {
+    printLog('Pin and specpin stored, checking session');
+    var result = await api.checkSession(secretKey);
+    if (result['status'].toString() == 'success') {
+      sessionCheck = true;
+    } else {
+      sessionCheck = false;
+    }
+  } else {
+    printLog('No pin or specpin stored');
+  }
+
   //notUploaded = jsonDecode(sharedPreferences.getString('notUploaded') ?? '[]') as List<List<String>>;
   List temp = jsonDecode(sharedPreferences.getString('notUploaded') ?? '[]');
   //print(temp);
@@ -36,7 +48,8 @@ Future<void> main() async {
     notUploaded.add(t.map((e) => e.toString()).toList());
     //print(t);
   }
-  print(notUploaded);
+  //print(notUploaded);
+  applicationSupportDirectory = (await getApplicationSupportDirectory()).path;
   runApp(const MyApp());
 }
 
@@ -52,9 +65,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: !(pin == '' || specpin == '' || !sessionCheck)
+      home: (pin == '' || specpin == '' || !sessionCheck)
           ? const LoginPage()
-          : const AskPinCodePage(),
+          : const NormalModePage(),
     );
   }
 }

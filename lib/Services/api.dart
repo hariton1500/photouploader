@@ -5,12 +5,14 @@ import 'package:photouploader/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Api {
-  final String baseUrl = 'https://cloudphoto-stuff.ru';
+  //final String baseUrl = 'https://cloudphoto-stuff.ru';
+  final String baseUrl = 'https://smartcloud.boo';
 
   Api();
 
   Future<Map<String, dynamic>> authenticate(
       String login, String password) async {
+    printLog('[authenticate]');
     http.Response response = http.Response('', 511);
     try {
       response = await http.post(
@@ -31,6 +33,7 @@ class Api {
   }
 
   Future<Map<String, dynamic>> checkSession(String apiKey) async {
+    printLog('[checkSession]');
     http.Response response = http.Response('', 511);
     try {
       response = await http.get(
@@ -51,6 +54,12 @@ class Api {
 
   Future<String> uploadGroupByUploader(String apiKey, String description,
       Map<String, String> filesGeo, List<String> files, String groupId) async {
+    printLog('[uploadGroupByUploader]');
+    printLog('url: $baseUrl/api/put_files');
+    printLog('filesGeo: ${jsonEncode(filesGeo)}');
+    printLog('headers: $apiKey');
+    printLog(
+        'file: ${jsonEncode(files.map((file) => file.split('/').last).toList())}');
     final taskId = await uploader.enqueue(MultipartFormDataUpload(
         tag: groupId,
         url: '$baseUrl/api/put_files',
@@ -97,7 +106,8 @@ class Api {
   }
 
   Map<String, dynamic> _handleResponse(http.Response response) {
-    print(response.statusCode);
+    printLog('handleResponse: ${response.body}');
+    printLog('response.statusCode: ${response.statusCode}');
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
       //print(responseData);
@@ -108,11 +118,13 @@ class Api {
         return {'status': 'error', 'message': 'Bad API key'};
       }
     } else if (response.statusCode == 400) {
+      final responseData = jsonDecode(response.body);
       //print(response.body);
       return {'status': 'error', 'message': 'Not all parameters were passed.'};
     } else if (response.statusCode == 401) {
+      final responseData = jsonDecode(response.body);
       //print(response.body);
-      return {'status': 'error', 'message': 'Invalid authorization.'};
+      return {'status': 'error', 'message': responseData['message']};
     } else {
       //print(response.body);
       return {'status': 'error', 'message': 'Unknown error'};
@@ -120,6 +132,8 @@ class Api {
   }
 
   Future<void> saveSecretKey(String secretKey) async {
+    printLog('[saveSecretKey]');
+    printLog('secretKey: $secretKey');
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     sharedPreferences.setString('secretKey', secretKey);
   }

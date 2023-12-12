@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:photouploader/Pages/menu.dart';
 import 'package:photouploader/Services/api.dart';
 import 'package:photouploader/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,12 +21,15 @@ class _GroupsPageState extends State<GroupsPage> {
   Map<String, String> groupsTasksIds = {};
   StreamSubscription<UploadTaskProgress>? _progressSubscription;
   StreamSubscription<UploadTaskResponse>? _resultSubscription;
+  Map<String, List<Widget>> littlesByGroup = {};
 
   @override
   void initState() {
     super.initState();
     uploader.cancelAll();
     uploader.clearUploads();
+    getLittles();
+
     for (var group in notUploaded) {
       groupsProgress[group[0]] = 0;
     }
@@ -39,11 +43,18 @@ class _GroupsPageState extends State<GroupsPage> {
       });
     });
     _resultSubscription = uploader.result.listen((result) async {
-      printLog('result.response: ${result.response}');
-      printLog('result.status: ${result.status?.description}');
       if (groupsTasksIds.containsKey(result.taskId)) {
         var groupId = groupsTasksIds[result.taskId];
+        try {
+          printLog('=================-result.response:-==================');
+          printLog(jsonDecode(result.response!));
+          printLog('=====================================================');
+        } catch (e) {
+          printLog('result.response: ${result.response}');
+          printLog('result.status: ${result.status?.description}');
+        }
         if (result.response != null &&
+            !result.response!.startsWith('<html>') &&
             jsonDecode(result.response!)['status'] == 'success') {
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Группа ${groupId.hashCode} загружена')));
@@ -53,15 +64,17 @@ class _GroupsPageState extends State<GroupsPage> {
             int numberOfPhotos = (jsonDecode(targetGroup[2]) as List).length;
             for (var i = 0; i < numberOfPhotos; i++) {
               File('${(await getApplicationSupportDirectory()).path}/${targetGroup[0]}-$i.jpg')
-                  .delete();
+                  .delete()
+                  .then((value) => printLog('${value.path} is deleted'));
             }
           } catch (e) {
-            print(e);
+            printLog(e);
           }
           notUploaded.removeWhere((element) => element.contains(groupId));
           SharedPreferences sharedPreferences =
               await SharedPreferences.getInstance();
           sharedPreferences.setString('notUploaded', jsonEncode(notUploaded));
+          //setState(() {});
         } else if (result.status == UploadTaskStatus.complete &&
             jsonDecode(result.response!)['status'] != 'success') {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -82,9 +95,15 @@ class _GroupsPageState extends State<GroupsPage> {
 
   @override
   Widget build(BuildContext context) {
-    print(notUploaded);
+    //print(notUploaded);
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+            onPressed: () {
+              Navigator.of(context).pushReplacement(MaterialPageRoute(
+                  builder: (context) => const NormalModePage()));
+            },
+            icon: const Icon(Icons.arrow_back)),
         /*
         actions: [
           IconButton(
@@ -92,7 +111,9 @@ class _GroupsPageState extends State<GroupsPage> {
                 showAdaptiveDialog(
                     context: context,
                     builder: (context) => Scaffold(
-                          body: Text(appLog),
+                          body: SingleChildScrollView(
+                              child:
+                                  Text(appLog.substring(appLog.length - 3000))),
                         ));
               },
               icon: const Icon(Icons.screenshot_monitor))
@@ -104,20 +125,28 @@ class _GroupsPageState extends State<GroupsPage> {
             ? const Center(child: Text('Незагруженных фотографий нет'))
             : Column(
                 children: notUploaded.map((group) {
-                print(group);
+                printLog(group);
                 return ListTile(
-                  leading: Text(group[0].hashCode.toString()),
+                  //leading: littleGroupFiles(group),
                   title: Wrap(
                     children: [
-                      const Text('Описание группы: '),
+                      //const Text('Описание группы: '),
                       Text(group[1].toString()),
                     ],
                   ),
-                  subtitle: Row(
-                    children: [
-                      const Text('количество фото: '),
-                      Text((jsonDecode(group[2]) as List).length.toString()),
-                    ],
+                  subtitle: Wrap(
+                    spacing: 5,
+                    children:
+                        //const Text('количество фото: '),
+                        //Text((jsonDecode(group[2]) as List).length.toString()),
+                        !(littlesByGroup.containsKey(group[1]) &&
+                                littlesByGroup[group[1]]!.isNotEmpty)
+                            ? [
+                                const CircularProgressIndicator(
+                                  strokeWidth: 1,
+                                )
+                              ]
+                            : littlesByGroup[group[1]]!,
                   ),
                   trailing: groupsProgress[group[0]] == 0
                       ? IconButton(
@@ -138,7 +167,7 @@ class _GroupsPageState extends State<GroupsPage> {
                                 //XFile(path).readAsBytes();
                                 //XFile(path);
                               }
-                              print(geoFiles);
+                              printLog(geoFiles);
 
                               Api api = Api();
                               api
@@ -148,7 +177,7 @@ class _GroupsPageState extends State<GroupsPage> {
                                 groupsTasksIds[taskId] = group[0];
                               });
                             } catch (e) {
-                              print(e);
+                              printLog(e);
                             }
                             //upload files
                             //on success delete files and remove from notUploaded
@@ -159,5 +188,20 @@ class _GroupsPageState extends State<GroupsPage> {
               }).toList()),
       ),
     );
+  }
+
+  Future<void> getLittles() async {
+    String baseDir = (await getApplicationSupportDirectory()).path;
+    for (var group in notUploaded) {
+      littlesByGroup[group[1]] = [];
+      var data = (jsonDecode(group[2]));
+      for (var i = 0; i < data.length; i++) {
+        String path = '$baseDir/${group[0]}-$i.jpg';
+        printLog(path);
+        littlesByGroup[group[1]]
+            ?.add(SizedBox(width: 60, child: Image.file(File(path))));
+        setState(() {});
+      }
+    }
   }
 }

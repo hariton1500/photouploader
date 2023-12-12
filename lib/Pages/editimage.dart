@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_painter/image_painter.dart';
+import 'package:photouploader/globals.dart';
 //import 'package:photouploader/Fonts/roboto.dart';
 
 Map<String, String> editImageStageStrings = {
@@ -35,14 +36,15 @@ class _EditImagePageState extends State<EditImagePage> {
 
   @override
   void initState() {
+    doLock = false;
+    printLog('[inactive lock canceled]');
     super.initState();
     memoryUint8List = File(widget.pathFromPicker).readAsBytesSync();
-    //
-    //makeEditProcedures();
   }
 
   @override
   Widget build(BuildContext context) {
+    printLog('[editimagepage build with stage: $stage]');
     return Scaffold(
       appBar: AppBar(
         title: Text(editImageStageStrings[stage]!),
@@ -143,6 +145,8 @@ class _EditImagePageState extends State<EditImagePage> {
   }
 
   void returnEditedImage(Uint8List newUint8List) {
+    doLock = false;
+    printLog('[inactive lock canceled]');
     Navigator.pop(context, newUint8List);
   }
 }

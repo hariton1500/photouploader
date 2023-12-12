@@ -1,34 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:photouploader/Pages/askpin.dart';
+import 'package:photouploader/Pages/Auth/specpin.dart';
 import 'package:photouploader/globals.dart';
 import 'package:pinput/pinput.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class SpecialPinCodePage extends StatefulWidget {
-  const SpecialPinCodePage({super.key});
+class PinCodePage extends StatefulWidget {
+  const PinCodePage({super.key});
 
   @override
-  State<SpecialPinCodePage> createState() => _SpecialPinCodePageState();
+  State<PinCodePage> createState() => _PinCodePageState();
 }
 
-class _SpecialPinCodePageState extends State<SpecialPinCodePage> {
-  String specPinCode = '';
+class _PinCodePageState extends State<PinCodePage> {
+  String pinCode = '';
   final TextEditingController _controller = TextEditingController(text: '');
   @override
   Widget build(BuildContext context) {
+    printLog('[PinCodePage.build()]');
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ввод специального пин кода'),
+        title: const Text('Ввод пин кода'),
+        centerTitle: true,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Pinput(
-              length: 4,
               controller: _controller,
               onCompleted: (pin) {
-                specPinCode = pin;
+                pinCode = pin;
               },
             ),
             Row(
@@ -41,13 +42,14 @@ class _SpecialPinCodePageState extends State<SpecialPinCodePage> {
                     child: const Text('Сбросить')),
                 TextButton(
                     onPressed: () async {
+                      printLog('[storing pin]');
                       SharedPreferences sharedPreferences =
                           await SharedPreferences.getInstance();
-                      sharedPreferences.setString('specpin', specPinCode);
-                      specpin = specPinCode;
+                      sharedPreferences.setString('pin', pinCode);
+                      pin = pinCode;
                       // ignore: use_build_context_synchronously
                       Navigator.of(context).pushReplacement(MaterialPageRoute(
-                          builder: (context) => const AskPinCodePage()));
+                          builder: (context) => const SpecialPinCodePage()));
                     },
                     child: const Text('Сохранить')),
               ],

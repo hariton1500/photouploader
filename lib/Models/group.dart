@@ -6,9 +6,9 @@ enum GroupStatus { created, uploading, uploaded }
 
 class Photo {
   double? long, lat;
-  String? path;
+  //String? path;
   Uint8List? data;
-  Photo({this.long, this.lat, this.path, this.data});
+  Photo({this.long, this.lat, this.data});
 }
 
 class Group {

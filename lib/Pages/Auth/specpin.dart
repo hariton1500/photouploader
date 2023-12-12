@@ -1,33 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:photouploader/Pages/specpin.dart';
+import 'package:photouploader/Pages/menu.dart';
 import 'package:photouploader/globals.dart';
 import 'package:pinput/pinput.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class PinCodePage extends StatefulWidget {
-  const PinCodePage({super.key});
+class SpecialPinCodePage extends StatefulWidget {
+  const SpecialPinCodePage({super.key});
 
   @override
-  State<PinCodePage> createState() => _PinCodePageState();
+  State<SpecialPinCodePage> createState() => _SpecialPinCodePageState();
 }
 
-class _PinCodePageState extends State<PinCodePage> {
-  String pinCode = '';
+class _SpecialPinCodePageState extends State<SpecialPinCodePage> {
+  String specPinCode = '';
   final TextEditingController _controller = TextEditingController(text: '');
   @override
   Widget build(BuildContext context) {
+    printLog('[SpecialPinCodePage.build()]');
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ввод пин кода'),
+        title: const Text('Ввод специального пин кода'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Pinput(
+              length: 4,
               controller: _controller,
               onCompleted: (pin) {
-                pinCode = pin;
+                specPinCode = pin;
               },
             ),
             Row(
@@ -40,13 +42,15 @@ class _PinCodePageState extends State<PinCodePage> {
                     child: const Text('Сбросить')),
                 TextButton(
                     onPressed: () async {
+                      printLog('[storing specpin]');
                       SharedPreferences sharedPreferences =
                           await SharedPreferences.getInstance();
-                      sharedPreferences.setString('pin', pinCode);
-                      pin = pinCode;
+                      sharedPreferences.setString('specpin', specPinCode);
+                      specpin = specPinCode;
                       // ignore: use_build_context_synchronously
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const SpecialPinCodePage()));
+                      Navigator.of(context).pushReplacement(MaterialPageRoute(
+                        builder: (context) => const NormalModePage(),
+                      ));
                     },
                     child: const Text('Сохранить')),
               ],
