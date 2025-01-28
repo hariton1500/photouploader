@@ -139,7 +139,7 @@ class _EditImagePageState extends State<EditImagePage> {
                   : ImagePainter.memory(
                       memoryUint8List,
                       key: _imageKey,
-                      watermarkText: '${widget.description}\n${widget.coords}',
+                      //watermarkText: '${widget.description}\n${widget.coords}',
                     )),
     );
   }
